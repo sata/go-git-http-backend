@@ -1,5 +1,5 @@
 name: Test
-on: [push, pull_request]
+on: [push]
 jobs:
   test:
     strategy:
@@ -16,6 +16,11 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: lint
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: lint
       - name: test
         uses: magefile/mage-action@v1
         with:
