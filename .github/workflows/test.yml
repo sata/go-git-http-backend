@@ -11,18 +11,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@fcdc43634adb5f7ae75a9d7a9b9361790f7293e2 # v3.1.0
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
       - name: lint
-        uses: magefile/mage-action@v1
+        uses: magefile/mage-action@0a2bfd2ca891da3552ae39be755aecdce60ed1bc # v1.7.0
         with:
           version: latest
           args: lint
       - name: test
-        uses: magefile/mage-action@v1
+        uses: magefile/mage-action@0a2bfd2ca891da3552ae39be755aecdce60ed1bc # v1.7.0
         with:
           version: latest
           args: test
