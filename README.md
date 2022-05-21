@@ -10,10 +10,14 @@ push operations.
 ## Motivation
 
 To provide an easy way for writing tests in Go for any tooling that
-interacts with a remote Git repository. In my case, it was to test a
-GitOps promotion tool behaviour was correct. As in, the actual
-artefact of running the promotion tool, resulted in manifest in the
-appropiate environments.
+interacts with a remote Git repository.
+
+In my case, it was to test a GitOps promotion tool behaviour was
+correct. As in, the actual artefact of running the promotion tool,
+resulted in producing commits and Git blobs that matched our
+expectations of both path and content, while still testing end to end
+of the tool, without any mocks or test interfaces over client or
+storage.
 
 ## Development
 
