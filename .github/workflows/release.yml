@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - fix-release
 jobs:
   tag:
     name: Tag
@@ -16,6 +17,7 @@ jobs:
         uses: TriPSs/conventional-changelog-action@64b6a5db055a91612ec02cd77ea24a23e3437f12 # v3.11.0
         with:
           github-token: ${{ secrets.github_token }}
+          skip-version-file: "true"
   goreleaser:
     name: Release
     needs: tag
