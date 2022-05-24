@@ -17,6 +17,12 @@ func (s *Server) GetReceivePack(respWriter http.ResponseWriter, req *http.Reques
 		return
 	}
 
+	if err := s.authenticate(req.BasicAuth()); err != nil {
+		http.Error(respWriter, "invalid auth", http.StatusUnauthorized)
+
+		return
+	}
+
 	if err := validateContentType(req, transport.ReceivePackServiceName); err != nil {
 		http.Error(respWriter, err.Error(), http.StatusBadRequest)
 

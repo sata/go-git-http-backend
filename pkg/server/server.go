@@ -37,13 +37,23 @@ var (
 	ErrOwnerMissing      = fmt.Errorf("owner is empty")
 	ErrRepoNameMissing   = fmt.Errorf("repoName is empty")
 	ErrNilServer         = fmt.Errorf("server is nil")
+	ErrInvalidAuth       = fmt.Errorf("invalid auth")
 )
 
+// BasicAuth is used to carry authentication for the HTTP endpoints.
+type BasicAuth struct {
+	Username string
+	Password string
+}
+
+// Server holds the Git repository as well as the sessions for
+// git-upload-pack and git-receive-pack operations.
 type Server struct {
 	Owner    string
 	RepoName string
 
 	SessionTimeout time.Duration
+	basicAuth      BasicAuth
 
 	repo *git.Repository
 
@@ -53,9 +63,9 @@ type Server struct {
 	rpSession transport.ReceivePackSession
 }
 
-type Option func(*Server) error
+type Option func(*Server)
 
-func New(repo *git.Repository, owner, repoName string) (*Server, error) {
+func New(repo *git.Repository, owner, repoName string, opts ...Option) (*Server, error) {
 	if repo == nil {
 		return nil, ErrRepoUninitialized
 	}
@@ -78,11 +88,19 @@ func New(repo *git.Repository, owner, repoName string) (*Server, error) {
 		RepoName: strings.ToLower(repoName),
 
 		SessionTimeout: defSessionTimeout,
+		basicAuth: BasicAuth{
+			Username: "",
+			Password: "",
+		},
 
 		repo: repo,
 
 		upSession: nil,
 		rpSession: nil,
+	}
+
+	for _, opt := range opts {
+		opt(srv)
 	}
 
 	if err := srv.newSessions(); err != nil {
@@ -109,6 +127,12 @@ func (s *Server) RepoPath() string {
 	return path.Join(s.Owner, fmt.Sprintf("%s.git", s.RepoName))
 }
 
+func WithBasicAuth(ba BasicAuth) Option {
+	return func(s *Server) {
+		s.basicAuth = ba
+	}
+}
+
 func (s *Server) newSessions() error {
 	gitSrv := tsrv.NewServer(s)
 
@@ -126,4 +150,17 @@ func (s *Server) newSessions() error {
 	s.rpSession = rpSession
 
 	return nil
+}
+
+func (s *Server) authenticate(username, password string, _ bool) error {
+	if s.basicAuth == (BasicAuth{Username: "", Password: ""}) {
+		return nil
+	}
+
+	if s.basicAuth.Username == username &&
+		s.basicAuth.Password == password {
+		return nil
+	}
+
+	return ErrInvalidAuth
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	gitfs "github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/sata-form3/go-git-http-backend/pkg/server"
@@ -20,23 +21,57 @@ import (
 const (
 	owner    = "bob"
 	repoName = "shed"
+	filename = "somefile"
+	content  = "some content"
 )
 
 func TestCloneHTTP(t *testing.T) {
 	t.Parallel()
 
-	fileName := "some_file"
-	content := "some_content"
-	testRepo := repoWithInitCommit(t, fileName, content)
+	testRepo := repoWithInitCommit(t, filename, content)
 
 	srv, err := server.NewHTTPTest(testRepo, owner, repoName)
+	require.NoError(t, err, "server.New")
+
+	a := newCloneAssert(t, srv.URL())
+	a.assert(filename, content)
+}
+
+func TestCloneHTTPWithAuth(t *testing.T) {
+	t.Parallel()
+
+	testRepo := repoWithInitCommit(t, filename, content)
+
+	auth := server.BasicAuth{
+		Username: "godmode",
+		Password: "IDKFA",
+	}
+
+	srv, err := server.NewHTTPTest(testRepo, owner, repoName, server.WithBasicAuth(auth))
+	require.NoError(t, err, "server.New")
+
+	a := newCloneAssert(t, srv.URL(), withAuth(auth))
+	a.assert(filename, content)
+}
+
+func TestCloneHTTPWitInvalidAuth(t *testing.T) {
+	t.Parallel()
+
+	testRepo := repoWithInitCommit(t, filename, content)
+
+	auth := server.BasicAuth{
+		Username: "godmode",
+		Password: "IDKFA",
+	}
+
+	srv, err := server.NewHTTPTest(testRepo, owner, repoName, server.WithBasicAuth(auth))
 	require.NoError(t, err, "server.New")
 
 	storage := gitfs.NewStorage(memfs.New(), cache.NewObjectLRUDefault())
 	opts := &git.CloneOptions{
 		Auth: &http.BasicAuth{
-			Username: "some-test",
-			Password: "some-pass",
+			Username: "incorrect",
+			Password: "incorrect",
 		},
 		URL:           srv.URL(),
 		RemoteName:    "origin",
@@ -44,26 +79,14 @@ func TestCloneHTTP(t *testing.T) {
 		SingleBranch:  false,
 		Depth:         0,
 	}
-
-	repo, err := git.CloneContext(context.Background(), storage, memfs.New(), opts)
-	require.NoError(t, err)
-	require.NotEmpty(t, repo)
-
-	wt, err := repo.Worktree()
-	require.NoError(t, err)
-
-	fs := wt.Filesystem
-	readContent := readFile(t, fs, fileName)
-
-	require.Equal(t, content, readContent, "content mismatch")
+	_, err = git.CloneContext(context.Background(), storage, memfs.New(), opts)
+	require.ErrorIs(t, err, transport.ErrAuthenticationRequired)
 }
 
 func TestCloneExternalHTTPWithGin(t *testing.T) {
 	t.Parallel()
 
-	fileName := "some_file"
-	content := "some_content"
-	testRepo := repoWithInitCommit(t, fileName, content)
+	testRepo := repoWithInitCommit(t, filename, content)
 
 	defVal := gin.Mode()
 
@@ -80,28 +103,8 @@ func TestCloneExternalHTTPWithGin(t *testing.T) {
 	srv.SetupGinRoutes(g)
 	httpsrv := httptest.NewServer(g)
 
-	storage := gitfs.NewStorage(memfs.New(), cache.NewObjectLRUDefault())
-	opts := &git.CloneOptions{
-		Auth: &http.BasicAuth{
-			Username: "some-test",
-			Password: "some-pass",
-		},
-		URL:           fmt.Sprintf("%s/%s/%s.git", httpsrv.URL, owner, repoName),
-		RemoteName:    "origin",
-		ReferenceName: plumbing.NewBranchReferenceName("master"),
-		SingleBranch:  false,
-		Depth:         0,
-	}
+	url := fmt.Sprintf("%s/%s", httpsrv.URL, srv.RepoPath())
 
-	repo, err := git.CloneContext(context.Background(), storage, memfs.New(), opts)
-	require.NoError(t, err)
-	require.NotEmpty(t, repo)
-
-	wt, err := repo.Worktree()
-	require.NoError(t, err)
-
-	fs := wt.Filesystem
-	readContent := readFile(t, fs, fileName)
-
-	require.Equal(t, content, readContent, "content mismatch")
+	a := newCloneAssert(t, url)
+	a.assert(filename, content)
 }
