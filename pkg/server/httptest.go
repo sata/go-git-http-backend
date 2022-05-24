@@ -15,8 +15,8 @@ type HTTPTestServer struct {
 
 // NewHTTPTest initialises a new Git Server as well as a HTTP test
 // server which is started.
-func NewHTTPTest(repo *git.Repository, owner, repoName string) (*HTTPTestServer, error) {
-	server, err := New(repo, owner, repoName)
+func NewHTTPTest(repo *git.Repository, owner, repoName string, opts ...Option) (*HTTPTestServer, error) {
+	server, err := New(repo, owner, repoName, opts...)
 	if err != nil {
 		return nil, err
 	}
