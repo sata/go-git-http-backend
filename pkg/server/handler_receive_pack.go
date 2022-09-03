@@ -41,7 +41,7 @@ func (s *Server) GetReceivePack(respWriter http.ResponseWriter, req *http.Reques
 		internalErr(respWriter, err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), s.SessionTimeout)
+	ctx, cancel := context.WithTimeout(req.Context(), s.SessionTimeout)
 	defer cancel()
 
 	resp, err := s.rpSession.ReceivePack(ctx, refReq)

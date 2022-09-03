@@ -112,8 +112,7 @@ func New(repo *git.Repository, owner, repoName string, opts ...Option) (*Server,
 
 // Load provides the object store for the given end point to satisfy
 // Go-Git sessions.
-// nolint:ireturn
-func (s *Server) Load(*transport.Endpoint) (storer.Storer, error) {
+func (s *Server) Load(*transport.Endpoint) (storer.Storer, error) { //nolint:ireturn
 	if s.repo == nil {
 		return nil, ErrRepoUninitialized
 	}

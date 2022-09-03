@@ -13,7 +13,7 @@ const binDir = "tools"
 var (
 	linter = bintool.Must(bintool.New(
 		"golangci-lint{{.BinExt}}",
-		"1.45.2",
+		"1.49.0",
 		"https://github.com/golangci/golangci-lint/releases/download/v{{.Version}}/golangci-lint-{{.Version}}-{{.GOOS}}-{{.GOARCH}}{{.ArchiveExt}}",
 		bintool.WithFolder(binDir),
 	))

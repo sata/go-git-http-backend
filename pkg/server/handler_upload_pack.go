@@ -56,7 +56,7 @@ func (s *Server) GetUploadPack(respWriter http.ResponseWriter, req *http.Request
 		packReq.Depth = packp.DepthCommits(0)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), s.SessionTimeout)
+	ctx, cancel := context.WithTimeout(req.Context(), s.SessionTimeout)
 	defer cancel()
 
 	resp, err := s.upSession.UploadPack(ctx, packReq)
