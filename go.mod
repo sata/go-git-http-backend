@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/magefile/mage v1.14.0
 	github.com/princjef/mageutil v1.0.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
