@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.7.0
-	github.com/magefile/mage v1.14.0
+	github.com/magefile/mage v1.15.0
 	github.com/princjef/mageutil v1.0.0
 	github.com/stretchr/testify v1.8.4
 )
